@@ -55,13 +55,13 @@ resource "google_compute_instance" "vm-bastionhost" {
   }
   network_interface {
       subnetwork = "default"
-      access_config {
-          nat_ip = "${google_compute_address.bastion-address.address}"
-      }
   }
   network_interface {
       network = "${google_compute_network.securenetwork.name}"
       subnetwork = "${google_compute_subnetwork.subnet.name}"
+      access_config {
+          nat_ip = "${google_compute_address.bastion-address.address}"
+      }
   }
   tags = ["rdp"]
 
