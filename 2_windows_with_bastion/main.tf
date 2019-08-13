@@ -11,12 +11,13 @@ resource "google_compute_subnetwork" "subnet" {
 
 resource "google_compute_firewall" "allow-rdp" {
   name = "allow-rdp"
-  network = "default"
+  network = "${google_compute_network.securenetwork.name}"
   allow {
       protocol = "tcp"
       ports    = ["3389"]
   }
-  source_tags = ["rdp"]
+  target_tags = ["rdp"]
+  source_ranges = "0.0.0.0/0"
 }
 
 resource "google_compute_instance" "vm-securehost" {
@@ -28,11 +29,11 @@ resource "google_compute_instance" "vm-securehost" {
       }
   }
   network_interface {
-      subnetwork = "default"
-  }
-  network_interface {
       network = "${google_compute_network.securenetwork.name}"
       subnetwork = "${google_compute_subnetwork.subnet.name}"
+  }
+  network_interface {
+      subnetwork = "default"
   }
   tags = ["rdp"]
   provisioner "local-exec" {
@@ -54,14 +55,14 @@ resource "google_compute_instance" "vm-bastionhost" {
       }
   }
   network_interface {
-      subnetwork = "default"
-  }
-  network_interface {
       network = "${google_compute_network.securenetwork.name}"
       subnetwork = "${google_compute_subnetwork.subnet.name}"
       access_config {
           nat_ip = "${google_compute_address.bastion-address.address}"
       }
+  }
+  network_interface {
+      subnetwork = "default"
   }
   tags = ["rdp"]
 
