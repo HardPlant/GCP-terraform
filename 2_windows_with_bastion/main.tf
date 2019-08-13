@@ -56,7 +56,7 @@ resource "google_compute_instance" "vm-bastionhost" {
   network_interface {
       subnetwork = "default"
       access_config {
-          nat_ip = "${google_compute_address.bastion-address.name}"
+          nat_ip = "${google_compute_address.bastion-address.address}"
       }
   }
   network_interface {
