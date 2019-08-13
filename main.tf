@@ -3,9 +3,9 @@ resource "google_compute_network" "securenetwork" {
   auto_create_subnetworks = false
 }
 
-resource "google_compute_subnetwork" "securenetwork" {
+resource "google_compute_subnetwork" "subnet" {
   name = "subnet"
-  network = "securenetwork"
+  network = "${google_compute_network.securenetwork.name}"
   ip_cidr_range = "10.0.1.0/24"
 }
 
@@ -16,6 +16,7 @@ resource "google_compute_firewall" "allow-rdp" {
       protocol = "tcp"
       ports    = ["3389"]
   }
+  source_tags = ["rdp"]
 }
 
 resource "google_compute_instance" "vm-securehost" {
@@ -27,9 +28,22 @@ resource "google_compute_instance" "vm-securehost" {
       }
   }
   network_interface {
-      network = "securenetwork"
+      subnetwork = "default"
+  }
+  network_interface {
+      network = "${google_compute_network.securenetwork.name}"
+      subnetwork = "${google_compute_subnetwork.subnet.name}"
+  }
+  tags = ["rdp"]
+  provisioner "local-exec" {
+      command = "gcloud compute reset-windows-password vm-bastionhost --user app_admin --zone us-central1-a"
   }
 }
+
+resource "google_compute_address" "bastion-address" {
+  name = "bastion-address"
+}
+
 
 resource "google_compute_instance" "vm-bastionhost" {
   name = "vm-bastionhost"
@@ -40,12 +54,17 @@ resource "google_compute_instance" "vm-bastionhost" {
       }
   }
   network_interface {
-      network = "securenetwork"
+      subnetwork = "default"
+      access_config {
+          nat_ip = "${google_compute_address.bastion-address.name}"
+      }
   }
-
   network_interface {
-      network = "default"
+      network = "${google_compute_network.securenetwork.name}"
+      subnetwork = "${google_compute_subnetwork.subnet.name}"
   }
+  tags = ["rdp"]
+
   provisioner "local-exec" {
       command = "gcloud compute reset-windows-password vm-bastionhost --user app_admin --zone us-central1-a"
   }
