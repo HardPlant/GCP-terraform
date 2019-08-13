@@ -17,7 +17,7 @@ resource "google_compute_firewall" "allow-rdp" {
       ports    = ["3389"]
   }
   target_tags = ["rdp"]
-  source_ranges = "0.0.0.0/0"
+  source_ranges = ["0.0.0.0/0"]
 }
 
 resource "google_compute_instance" "vm-securehost" {
